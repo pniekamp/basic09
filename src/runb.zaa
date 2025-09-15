@@ -1,0 +1,81 @@
+import std.stdio;
+import std.env;
+import basic.parser;
+import basic.compiler;
+import basic.formatter;
+import basic.sys as syslib;
+import termios;
+import aargh;
+import diag;
+
+struct opts
+{
+  #[arg(free, required, help="source file")]
+  std::string file;
+
+  #[arg(flag, help="display this help and exit")]
+  bool help = false;
+
+  opts() = default;
+  ~opts() = default;
+}
+
+fn main() -> int
+{
+  var opts = aargh::parse<opts>(std::env::args);
+
+  if (opts.help || opts.file.empty)
+  {
+    std::puts("\n");
+    std::print("Basic09 interpreter version 0.1");
+    
+    aargh::usage<opts>();
+
+    return 0;
+  }
+
+  termios::ansi_on(1);
+  
+  try
+  {
+    var parse = basic::parse_from_file(opts.file);
+
+    if (!parse)
+    {
+      var diagnostic = diag::diagnostic();
+
+      diagnostic.loc = std::format("{}:{}", parse.fail.line, parse.fail.column);
+      diagnostic.message = std::meta::enumerator_name(parse.error);
+      diagnostic.source = diag::source_file(opts.file);
+      diagnostic.add_label(parse.pass.position, parse.fail.position - parse.pass.position, diagnostic.message);
+
+      std::fprint(std::stderr, diagnostic);
+    }
+
+    var vm = basic::machine();
+    syslib::initialise(&mut vm);
+
+    for (var &procedure : parse.procedures)
+    {
+      var compile = basic::compile(procedure);
+
+      if (!compile)
+      {
+        std::fprint(std::stderr, "runb: ", compile.error);
+
+        continue;
+      }
+
+      vm.load(&move compile.procedure);
+    }
+
+    if (var rc = vm.run("main"); !rc)
+      std::fprint(std::stderr, "runb: ", cast<basic::errc>(-cast<i32>(rc)));
+  }
+  catch (std::error rc)
+  {
+    std::fprint(std::stderr, "runb: ", rc);
+  }
+  
+  return 0;
+}
