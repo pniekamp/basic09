@@ -63,7 +63,7 @@ PROCEDURE prin
 
   END
 
-PROCEDURE main
+PROCEDURE qsort
   REM This procedure is used to test Quicksort
   REM It fills the array "d" with randomly generated
   REM numbers and sorts them.

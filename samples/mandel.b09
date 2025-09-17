@@ -1,4 +1,4 @@
-PROCEDURE main
+PROCEDURE mandel
     DIM color(16),tmpint,tmpint2:INTEGER
     DIM i:INTEGER
     DIM px,py,xz,yz,x,y,xy:REAL

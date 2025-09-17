@@ -1,5 +1,6 @@
 import std.stdio;
 import std.env;
+import sys.path;
 import basic.parser;
 import basic.compiler;
 import basic.formatter;
@@ -69,7 +70,15 @@ fn main() -> int
       vm.load(&move compile.procedure);
     }
 
-    if (var rc = vm.run("main"); !rc)
+    var mainproc = std::to_lowercase(sys::path_view(opts.file).stem);
+
+    for (var &[name, procedure] : vm.procedures)
+    {
+      if (std::to_lowercase(name) == mainproc)
+        mainproc = name;
+    }
+
+    if (var rc = vm.run(mainproc); !rc)
       std::fprint(std::stderr, "runb: ", cast<basic::errc>(-cast<i32>(rc)));
   }
   catch (std::error rc)

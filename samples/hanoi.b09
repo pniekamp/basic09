@@ -1,4 +1,4 @@
-PROCEDURE hanoi
+PROCEDURE  move
   (* by T.F. Ritter
   (* move n discs in Tower of Hanoi game
   (* See BYTE Magazine, Oct 1980, pg. 279
@@ -7,11 +7,11 @@ PROCEDURE hanoi
   IF n=1 THEN
     PRINT "move #"; n; " from "; from; " to "; to_
   ELSE
-    RUN hanoi(n-1,from,other,to_)
+    RUN  move(n-1,from,other,to_)
     PRINT "move #"; n; " from "; from; " to "; to_
-    RUN hanoi(n-1,other,to_,from)
+    RUN  move(n-1,other,to_,from)
   ENDIF
   END
 
-procedure main
-  run hanoi(4, "l", "r", "c")
+procedure hanoi
+  run move(4, "l", "r", "c")

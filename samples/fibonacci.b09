@@ -15,6 +15,3 @@ PROCEDURE fibonacci
     x := temp
     PRINT i, y
   NEXT i
-
-PROCEDURE main
-  run fibonacci
