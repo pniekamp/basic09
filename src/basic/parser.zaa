@@ -2176,6 +2176,9 @@ fn decllist(parse_context mut &ctx, std::vector<VarDecl> mut &decllist, InputRea
         if (ctx.tok.style != scalar_style::plain)
           return errc::illegal_statement;
 
+        if (!ctx.records.contains(ctx.tok.value))
+          return errc::illegal_record_type;
+
         vardecl.type = Type::Record(&move ctx.tok.value);
 
         ctx.consume_token(&mut is);
