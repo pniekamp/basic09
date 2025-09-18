@@ -135,6 +135,7 @@ pub union Statement
   pub Record(Record),
   pub Dim(std::vector<VarDecl>),
   pub Let(VarDecl),
+  pub Base(int),
   pub Expr(Expression),
   pub IfGoto(IfGoto),
   pub IfThen(IfThen),
@@ -2379,6 +2380,30 @@ fn kw_let(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> res
   return ok;
 }
 
+fn kw_base(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> result
+{
+  ctx.consume_token(&mut is);
+
+  if (ctx.tok.type != token::type::scalar || ctx.tok.style != scalar_style::numeric)
+    return errc::illegal_statement;
+
+  switch (ctx.tok.value)
+  {
+    case "0":
+      ctx.blocks.back.push_back(Statement::Base(0));
+
+    case "1":
+      ctx.blocks.back.push_back(Statement::Base(1));
+
+    else:
+      return errc::illegal_operand;
+  }
+
+  ctx.consume_token(&mut is);
+
+  return ok;
+}
+
 fn assign(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> result
 {
   var lhs = Expression();
@@ -3304,6 +3329,10 @@ fn statement(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> 
 
     case kw_let:
       if (var rc = kw_let(&mut ctx, &mut is); !rc)
+        return rc;
+
+    case kw_base:
+      if (var rc = kw_base(&mut ctx, &mut is); !rc)
         return rc;
 
     case kw_if:
