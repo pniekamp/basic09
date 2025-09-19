@@ -14,6 +14,9 @@ struct opts
   #[arg(free, required, help="source file")]
   std::string file;
 
+  #[arg(free, help="arguments")]
+  std::vector<std::string> args;
+
   #[arg(flag, help="display this help and exit")]
   bool help = false;
 
@@ -28,7 +31,7 @@ fn main() -> int
   if (opts.help || opts.file.empty)
   {
     std::puts("\n");
-    std::print("Basic09 interpreter version 0.1");
+    std::print("Basic09 interpreter version 0.2");
     
     aargh::usage<opts>();
 
@@ -78,7 +81,36 @@ fn main() -> int
         mainproc = name;
     }
 
-    if (var rc = vm.run(mainproc); !rc)
+    var src = std::format("PROCEDURE REPL\nRUN {}", mainproc);
+    
+    if (!opts.args.empty)
+    {
+      src.append("(");
+      
+      for (var &arg : opts.args)
+      {
+        src.append("\"", arg, "\"");
+        
+        if (&arg != &opts.args.back)
+          src.append(",");
+      }
+      
+      src.append(")");
+    }
+    
+    src.append("\n");
+    
+    var repl = basic::parse_from_string(src);
+
+    if (!repl)
+      std::fprint(std::stderr, "runb: ", cast<basic::errc>(repl.error));
+
+    var compile = basic::compile(repl.procedures[0]);
+
+    if (!compile)
+      std::fprint(std::stderr, "runb: ", cast<basic::errc>(compile.error));
+
+    if (var rc = vm.run(compile.procedure); !rc)
       std::fprint(std::stderr, "runb: ", cast<basic::errc>(-cast<i32>(rc)));
   }
   catch (std::error rc)

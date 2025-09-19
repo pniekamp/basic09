@@ -71,10 +71,10 @@ fn inkey(Sys mut &sys, machine mut &vm, usize argc) -> result
   if (var rc = vm.pop(&mut key); !rc)
     return rc;
 
-  var ch = 0;
-  var bytes = std::stdin.read(&ch, 1);
-
-  if (var rc = vm.store(&mut key, operand(std::string::from_utf8(&ch, cast<usize>(bytes)))); !rc)
+  var ch = u8(0);
+  var bytes = termios::read(0, &ch, 1);
+  
+  if (var rc = vm.store(&mut key, operand(std::string::from_utf8(&ch, cast<usize>(std::max(bytes, 0))))); !rc)
     return rc;
 
   return ok;
