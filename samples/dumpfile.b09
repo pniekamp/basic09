@@ -158,9 +158,6 @@ PROCEDURE DumpFile
           (* lines byte count starts with 17.
           RUN Colors(11) \PRINT LEFT$("0000000000",10-LEN(CurrentCount)); CurrentCount; " ";
 
-          (* Increment ByteAdr
-          ByteAdr := ByteAdr + 16
-
           (* Format output for hex display
           RUN Colors(13) \PRINT USING "H8", ByteAdr;
           PRINT " ";
@@ -172,6 +169,7 @@ PROCEDURE DumpFile
         (* if displayed byte count=16 then time to start again
         IF DisplayCnt = 16 THEN
           DisplayCnt := 0
+          ByteAdr := ByteAdr + 16
         ENDIF
 
         (* Print hex value of current byte
