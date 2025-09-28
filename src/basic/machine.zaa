@@ -1653,9 +1653,9 @@ fn print(machine mut &vm) -> result
   var fd = 0;
   vm.linebuf.clear();
 
-  var format = std::string_view();
-  var groups = std::vector<u8*>();
-  var fmt = format.end;
+  var format = std::string();
+  var groups = std::vector<u8 mut *>();
+  var fmt = format.begin;
 
   for (vm.ip += 1;;)
   {
@@ -1670,12 +1670,13 @@ fn print(machine mut &vm) -> result
         fd = vm.stack.take_back().integer;
 
       case op::kw_using:
-        var offset = cast<usize>(*(vm.ip + 1)) + cast<usize>(*(vm.ip + 2)) << 8;
+        vm.ip += 1;
 
-        format = vm.frame.rodata[offset + 1 .. offset + 1 + cast<usize>(vm.frame.rodata[offset])];
+        if (var rc = evaluate(&mut vm); !rc)
+          return rc;
+
+        format = vm.stack.take_back().as_string;
         fmt = format.begin;
-
-        vm.ip += 4;
 
       case 0x60 ..= 0xff:
         if (var rc = evaluate(&mut vm); !rc)

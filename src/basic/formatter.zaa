@@ -690,6 +690,10 @@ fn format_to(OutputStream mut &os, std::span<u8> icode) throws(std::error) -> vo
           std::print_to(&mut os, "PRINT ");
           ip += 1;
 
+        case op::kw_using:
+          std::format_to(&mut os, "USING ");
+          ip += 1;
+
         case op::kw_input:
           std::print_to(&mut os, "INPUT ");
           ip += 1;
@@ -877,12 +881,6 @@ fn format_to(OutputStream mut &os, std::span<u8> icode) throws(std::error) -> vo
           var offset = cast<usize>(*(ip + 1)) + cast<usize>(*(ip + 2)) << 8;
           var name = header.rodata[offset + 1 .. offset + 1 + cast<usize>(header.rodata[offset])];
           std::format_to(&mut os, "RUN {}", std::string_view(name));
-          ip += 3;
-
-        case op::kw_using:
-          var offset = cast<usize>(*(ip + 1)) + cast<usize>(*(ip + 2)) << 8;
-          var name = header.rodata[offset + 1 .. offset + 1 + cast<usize>(header.rodata[offset])];
-          std::format_to(&mut os, "USING \"{}\"", std::string_view(name));
           ip += 3;
 
         case op::kw_restore:

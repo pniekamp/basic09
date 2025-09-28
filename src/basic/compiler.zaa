@@ -796,11 +796,12 @@ fn emit_print(compile_context mut &ctx, Print &print) -> result
     ctx.text.push_back(cast<u8>(op::comma));
   }
 
-  if (print.format != "")
+  if (print.format)
   {
     ctx.text.push_back(cast<u8>(op::kw_using));
 
-    emit_string(&mut ctx, print.format);
+    if (var rc = emit_expression(&mut ctx, print.format); !rc)
+      return rc;
 
     ctx.text.push_back(cast<u8>(op::comma));
   }

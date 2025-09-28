@@ -456,7 +456,7 @@ pub struct Print
   }
 
   pub Expression fd;
-  pub std::string format;
+  pub Expression format;
   pub std::vector<Item> items;
 
   pub Print()
@@ -1994,12 +1994,11 @@ fn kw_print(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> r
   {
     ctx.consume_token(&mut is);
 
-    if (ctx.tok.type != token::type::scalar || ctx.tok.style != scalar_style::doublequoted)
+    if (var rc = parse_expression(&mut ctx, &mut print.format, &mut is); !rc)
+      return rc;
+
+    if (!print.format.type.is_string)
       return errc::illegal_expression_type;
-
-    print.format = &move ctx.tok.value;
-
-    ctx.consume_token(&mut is);
 
     if (ctx.tok.type != token::type::comma)
       return errc::illegal_expression_type;
