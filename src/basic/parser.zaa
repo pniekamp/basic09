@@ -2045,7 +2045,7 @@ fn kw_input(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> r
 
     ctx.consume_token(&mut is);
 
-    if (ctx.tok.type != token::type::comma)
+    if (ctx.tok.type != token::type::comma && ctx.tok.type != token::type::semi)
       return errc::missing_comma;
 
     ctx.consume_token(&mut is);

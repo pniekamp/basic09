@@ -55,10 +55,11 @@ pub enum op
   kw_base0 = 0x35,
   kw_base1 = 0x36,
   kw_rem = 0x37,
+  nop = 0x38,
   end = 0x39,
   label = 0x3a,
   lref = 0x3b,
-  nop = 0x3c,
+  dref = 0x3c,
   eoi = 0x3e,
   eol = 0x3f,
   kw_then = 0x45,
@@ -592,16 +593,10 @@ pub struct machine
     frame.link_storage_offset = cast<usize>(cast<header*>(procedure.icode.data).link_storage_offset);
     frame.first_data_statement = cast<usize>(cast<header*>(procedure.icode.data).first_data_statement);
 
-    if (frame.first_data_statement != 0)
-    {
-      frame.first_data_statement -= cast<usize>(cast<header*>(procedure.icode.data).text_offset);
-
-      frame.dp = frame.text.begin + frame.first_data_statement + 4;
-    }
-
     frame.ip = this.ip;
     frame.sp = this.stack.len - nargs;
     frame.bp = this.substack.len;
+    frame.dp = frame.text.begin + frame.first_data_statement + 3;
     frame.base = 1;
 
     this.ip = frame.text.begin;
@@ -1620,34 +1615,6 @@ fn evaluate(machine mut &vm) -> result
   return ok;
 }
 
-fn skip(machine mut &vm) -> result
-{
-  for (vm.ip += 1; *vm.ip != cast<u8>(op::eol); )
-  {
-    switch (*vm.ip)
-    {
-      case op::symbol:
-        vm.ip += 3;
-
-      case op::literal_integer:
-        vm.ip += 1 + sizeof<int>;
-
-      case 0x01 ..= 0x56:
-        vm.ip += 1;
-
-      case 0x58 ..= 0x75:
-        vm.ip += 1;
-
-      else:
-        std::panic("unhandled");
-    }
-  }
-
-  vm.ip += 1;
-
-  return ok;
-}
-
 fn print(machine mut &vm) -> result
 {
   var fd = 0;
@@ -2381,11 +2348,8 @@ fn read(machine mut &vm) -> result
               case op::comma:
                 vm.ip += 1;
 
-              case op::jmp_fwd_ne:
-                vm.ip += cast<usize>(*(vm.ip + 1)) + cast<usize>(*(vm.ip + 2)) << 8;
-
-                if (*vm.ip == cast<u8>(op::jmp_fwd_ne))
-                  vm.ip = vm.frame.text.begin + vm.frame.first_data_statement + 4;
+              case op::dref:
+                vm.ip = vm.frame.text.begin + cast<usize>(*(vm.ip + 1)) + cast<usize>(*(vm.ip + 2)) << 8 + cast<usize>(*(vm.ip + 3)) << 16;
 
               else:
                 std::panic("unhandled");
@@ -2681,7 +2645,26 @@ fn restore(machine mut &vm) -> result
   if (offset == 0)
     offset = vm.frame.first_data_statement;
 
-  vm.frame.dp = vm.frame.text.begin + offset + 4;
+  vm.frame.dp = vm.frame.text.begin + offset;
+
+  for (;;)
+  {
+    switch (*vm.frame.dp)
+    {
+      case op::kw_data:
+        vm.frame.dp += 3;
+        break;
+
+      case op::kw_rem:
+        vm.frame.dp += 1 + cast<usize>(*(vm.frame.dp + 1)) + cast<usize>(*(vm.frame.dp + 2)) << 8;
+
+      case op::eol:
+        vm.frame.dp += 1;
+
+      else:
+        return errc::missing_data_statement;
+    }
+  }
 
   vm.ip += 4;
 
@@ -2742,17 +2725,14 @@ fn step(machine mut &vm) -> result
   switch (*vm.ip)
   {
     case op::label:
-      vm.ip += 1;
-      vm.ip += 2;
+      vm.ip += 3;
 
     case op::kw_rem:
-      vm.ip += 1;
-      vm.ip += 1 + cast<usize>(*vm.ip) + 1;
-
     case op::kw_dim:
     case op::kw_type:
     case op::kw_param:
-      skip(&mut vm);
+    case op::kw_data:
+      vm.ip += 1 + cast<usize>(*(vm.ip + 1)) + cast<usize>(*(vm.ip + 2)) << 8;
 
     case op::kw_let:
     case op::kw_if:
@@ -2857,7 +2837,6 @@ fn step(machine mut &vm) -> result
 
     case op::lref:
     case op::kw_goto:
-    case op::kw_data:
       vm.ip = vm.frame.text.begin + cast<usize>(*(vm.ip + 1)) + cast<usize>(*(vm.ip + 2)) << 8 + cast<usize>(*(vm.ip + 3)) << 16;
 
     case op::kw_gosub:
