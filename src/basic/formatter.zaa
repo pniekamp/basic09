@@ -662,6 +662,14 @@ fn format_to(OutputStream mut &os, std::span<u8> icode) throws(std::error) -> vo
           std::print_to(&mut os, "BASE 1");
           ip += 1;
 
+        case op::kw_deg:
+          std::print_to(&mut os, "DEG");
+          ip += 1;
+
+        case op::kw_rad:
+          std::print_to(&mut os, "RAD");
+          ip += 1;
+
         case op::kw_type:
           std::print_to(&mut os, "TYPE ");
           ip += 3;

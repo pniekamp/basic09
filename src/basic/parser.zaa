@@ -136,6 +136,7 @@ pub union Statement
   pub Dim(std::vector<VarDecl>),
   pub Let(VarDecl),
   pub Base(int),
+  pub DegRad(int),
   pub Expr(Expression),
   pub IfGoto(IfGoto),
   pub IfThen(IfThen),
@@ -2403,6 +2404,24 @@ fn kw_base(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> re
   return ok;
 }
 
+fn kw_deg(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> result
+{
+  ctx.consume_token(&mut is);
+
+  ctx.blocks.back.push_back(Statement::DegRad(0));
+
+  return ok;
+}
+
+fn kw_rad(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> result
+{
+  ctx.consume_token(&mut is);
+
+  ctx.blocks.back.push_back(Statement::DegRad(1));
+
+  return ok;
+}
+
 fn assign(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> result
 {
   var lhs = Expression();
@@ -3332,6 +3351,14 @@ fn statement(parse_context mut &ctx, InputReader mut &is) throws(std::error) -> 
 
     case kw_base:
       if (var rc = kw_base(&mut ctx, &mut is); !rc)
+        return rc;
+
+    case kw_deg:
+      if (var rc = kw_deg(&mut ctx, &mut is); !rc)
+        return rc;
+
+    case kw_rad:
+      if (var rc = kw_rad(&mut ctx, &mut is); !rc)
         return rc;
 
     case kw_if:

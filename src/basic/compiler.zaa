@@ -277,7 +277,7 @@ fn emit_remark(compile_context mut &ctx, std::string &text) -> result
   ctx.text.push_back(cast<u8>(op::kw_rem));
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 2);
+  ctx.text.resize(ctx.text.len + 2);
 
   ctx.text.append(text);
 
@@ -864,7 +864,7 @@ fn emit_param(compile_context mut &ctx, std::vector<VarDecl> &vardecls) -> resul
   ctx.text.push_back(cast<u8>(op::kw_param));
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 2);
+  ctx.text.resize(ctx.text.len + 2);
 
   for (var &vardecl : vardecls)
   {
@@ -1059,7 +1059,7 @@ fn emit_type(compile_context mut &ctx, Record &rectype) -> result
   ctx.text.push_back(cast<u8>(op::kw_type));
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 2);
+  ctx.text.resize(ctx.text.len + 2);
 
   var record = symbol();
   record.type = op::type_record;
@@ -1278,7 +1278,7 @@ fn emit_dim(compile_context mut &ctx, std::vector<VarDecl> &vardecls) -> result
   ctx.text.push_back(cast<u8>(op::kw_dim));
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 2);
+  ctx.text.resize(ctx.text.len + 2);
 
   for (var &vardecl : vardecls)
   {
@@ -1564,6 +1564,22 @@ fn emit_base(compile_context mut &ctx, int base) -> result
   return ok;
 }
 
+fn emit_degrad(compile_context mut &ctx, int degrad) -> result
+{
+  switch (degrad)
+  {
+    case 0:
+      ctx.text.push_back(cast<u8>(op::kw_deg));
+
+    case 1:
+      ctx.text.push_back(cast<u8>(op::kw_rad));
+  }
+
+  ctx.text.push_back(cast<u8>(op::eol));
+
+  return ok;
+}
+
 fn emit_expr(compile_context mut &ctx, Expression &expression) -> result
 {
   if (var rc = emit_expression(&mut ctx, expression); !rc)
@@ -1601,7 +1617,7 @@ fn emit_if_goto(compile_context mut &ctx, IfGoto &ifgoto) -> result
     return rc;
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 3);
+  ctx.text.resize(ctx.text.len + 3);
 
   ctx.text.push_back(cast<u8>(op::kw_then));
 
@@ -1624,7 +1640,7 @@ fn emit_if_then(compile_context mut &ctx, IfThen &ifthen) -> result
     return rc;
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 3);
+  ctx.text.resize(ctx.text.len + 3);
 
   ctx.text.push_back(cast<u8>(op::kw_then));
   ctx.text.push_back(cast<u8>(op::eol));
@@ -1685,7 +1701,7 @@ fn emit_while_do(compile_context mut &ctx, WhileDo &whiledo) -> result
     return rc;
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 3);
+  ctx.text.resize(ctx.text.len + 3);
 
   ctx.text.push_back(cast<u8>(op::kw_do));
   ctx.text.push_back(cast<u8>(op::eol));
@@ -1795,7 +1811,7 @@ fn emit_for_next(compile_context mut &ctx, ForNext &fornext) -> result
   }
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 3);
+  ctx.text.resize(ctx.text.len + 3);
 
   ctx.text.push_back(cast<u8>(op::eol));
 
@@ -1886,7 +1902,7 @@ fn emit_exitif(compile_context mut &ctx, ExitIf &exitif) -> result
     return rc;
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 3);
+  ctx.text.resize(ctx.text.len + 3);
 
   ctx.text.push_back(cast<u8>(op::kw_then));
   ctx.text.push_back(cast<u8>(op::eol));
@@ -1957,7 +1973,7 @@ fn emit_data(compile_context mut &ctx, std::vector<Expression> &exprs) -> result
   ctx.text.push_back(cast<u8>(op::kw_data));
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 2);
+  ctx.text.resize(ctx.text.len + 2);
 
   for (var &expr : exprs)
   {
@@ -2269,7 +2285,7 @@ fn emit_ongoto(compile_context mut &ctx, OnGoto &ongoto) -> result
   }
 
   var endjmp = ctx.text.len;
-  ctx.text.resize(endjmp + 3);
+  ctx.text.resize(ctx.text.len + 3);
 
   for (var &target : ongoto.targets)
   {
@@ -2367,6 +2383,10 @@ fn emit_statement(compile_context mut &ctx, Statement &stmt) -> result
 
     case Base[base]:
       if (var rc = emit_base(&mut ctx, base); !rc)
+        return rc;
+
+    case DegRad[degrad]:
+      if (var rc = emit_degrad(&mut ctx, degrad); !rc)
         return rc;
 
     case Expr[expression]:
